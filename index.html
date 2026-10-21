@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1E6FD9">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<!-- Запрещаем любые сетевые запросы: страница работает только с тем, что внутри файла -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'">
+<title>FDI-116 jadval</title>
+<style>
+  :root {
+    --bg: #F2F4F7; --card: #FFFFFF; --text: #111827; --muted: #4B5563; --faint: #9CA3AF;
+    --accent: #1E6FD9; --accent2: #3D85E6; --onaccent: #FFFFFF; --head-sub: #D6E6FF;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0F1115; --card: #1A1D23; --text: #F3F4F6; --muted: #C2C7D0; --faint: #7B8494;
+      --accent: #1A5FBF; --accent2: #2C72D2; --head-sub: #C9DBF7;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--text);
+    font-family: -apple-system, system-ui, "Segoe UI", Roboto, sans-serif; }
+  header { background: var(--accent); color: var(--onaccent);
+    padding: calc(16px + env(safe-area-inset-top)) 16px 12px; position: sticky; top: 0; }
+  .group { font-size: 13px; color: var(--head-sub); }
+  .date { font-size: 22px; font-weight: 700; margin-top: 4px; position: relative; display: inline-block; }
+  .date input { position: absolute; inset: 0; opacity: 0; width: 100%; }
+  .week { font-size: 15px; margin: 2px 0 10px; color: var(--head-sub); }
+  nav { display: flex; gap: 6px; }
+  nav button { flex: 1; height: 44px; border: 0; border-radius: 10px; background: var(--accent2);
+    color: var(--onaccent); font-size: 15px; font-family: inherit; }
+  nav button:active { opacity: .7; }
+  main { padding: 12px 16px 32px; max-width: 640px; margin: 0 auto; }
+  .card { background: var(--card); border-radius: 12px; padding: 12px 14px; margin-bottom: 10px; }
+  .card.now { outline: 2px solid var(--accent2); }
+  .time { color: var(--accent2); font-weight: 700; font-size: 14px; }
+  .subj { font-size: 18px; font-weight: 700; margin: 4px 0 6px; }
+  .line { font-size: 15px; color: var(--muted); }
+  .weeks { font-size: 12px; color: var(--faint); margin-top: 4px; }
+  .empty { text-align: center; padding: 48px 16px; }
+  .empty b { font-size: 20px; display: block; }
+  .empty span { color: var(--muted); display: block; margin-top: 6px; }
+</style>
+</head>
+<body>
+<header>
+  <div class="group">FDI-116 · Funksional diagnostika ishi · I semestr</div>
+  <label class="date"><span id="dateText"></span> ▾<input type="date" id="picker"></label>
+  <div class="week" id="weekText"></div>
+  <nav>
+    <button id="prev" aria-label="Предыдущий день">◀</button>
+    <button id="today">Сегодня</button>
+    <button id="next" aria-label="Следующий день">▶</button>
+  </nav>
+</header>
+<main id="list"></main>
+
+<script>
+// Неделя 1 начинается в понедельник 28.09.2026. Учебных недель — 20.
+const WEEK1_MONDAY = Date.UTC(2026, 8, 28);
+const FIRST_DAY    = Date.UTC(2026, 8, 28);  // 28.09.2026
+const LAST_DAY     = Date.UTC(2027, 1, 27);  // 27.02.2027
+const MAX_WEEK = 20;
+
+const DAY_RU = ["Воскресенье","Понедельник","Вторник","Среда","Четверг","Пятница","Суббота"];
+const DAY_UZ = ["Yakshanba","Dushanba","Seshanba","Chorshanba","Payshanba","Juma","Shanba"];
+const MONTH = ["января","февраля","марта","апреля","мая","июня","июля","августа","сентября","октября","ноября","декабря"];
+
+const LOTIN  = "Lotin tili va tibbiy terminologiya";
+const TARIX  = "O'zbekistonning eng yangi tarixi";
+const AXBOROT = "Tibbiyotda axborot texnologiyalari";
+const QD = "Qarshiboyeva D.";
+
+// [день (1=Пн..6=Сб), пара, начало, конец, предмет, недели, аудитория, преподаватели]
+const L = [
+  [1,"V","14:20","15:40",LOTIN,"1-4","402",QD],
+  [1,"VI","15:50","17:10",LOTIN,"1-4","402",QD],
+
+  [2,"V","14:20","15:40",AXBOROT,"1-20","6","Muxammadiyev B."],
+  [2,"VI","15:50","17:10",TARIX,"1-20","204","Muslimova I."],
+
+  [3,"II","9:30","10:50","Rus tili","1-20","202","G'ulomxo'jayeva N."],
+  [3,"III","11:20","12:40",LOTIN,"1-4","402",QD],
+  [3,"IV","12:50","14:10",LOTIN,"1-4","403",QD],
+
+  [4,"I","8:00","9:20",LOTIN,"1-4","404",QD],
+  [4,"II","9:30","10:50",LOTIN,"1-4","405",QD],
+
+  [5,"IV","12:50","14:10",TARIX,"1-20","406","Shodmonova Dono"],
+  [5,"V","14:20","15:40",LOTIN,"1-4","407",QD],
+  [5,"VI","15:50","17:10",LOTIN,"1-4","408",QD],
+
+  [6,"I","8:00","9:20",LOTIN,"1-4","409",QD],
+  [6,"II","9:30","10:50",LOTIN,"1-4","410",QD],
+];
+
+function inWeek(spec, w) {
+  return spec.split(",").some(p => {
+    const [a, b] = p.split("-").map(Number);
+    return w >= a && w <= (b || a);
+  });
+}
+
+// Дата берётся из часов телефона; в UTC переводим только для подсчёта дней.
+function utcDay(d) { return Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()); }
+
+function weekOf(d) {
+  const t = utcDay(d);
+  if (t < FIRST_DAY || t > LAST_DAY) return 0;
+  const w = Math.floor((t - WEEK1_MONDAY) / 86400000 / 7) + 1;
+  return w <= MAX_WEEK ? w : 0;
+}
+
+function sameDay(a, b) { return utcDay(a) === utcDay(b); }
+function minutes(hm) { const [h, m] = hm.split(":").map(Number); return h * 60 + m; }
+function esc(s) { return s.replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+
+let current = new Date();
+
+function render() {
+  const d = current, dow = d.getDay(), week = weekOf(d), now = new Date();
+  const isToday = sameDay(d, now);
+  document.getElementById("dateText").textContent = `${d.getDate()} ${MONTH[d.getMonth()]} ${d.getFullYear()}`;
+  document.getElementById("weekText").textContent =
+    (week ? `${week}-я неделя · ` : "") + `${DAY_RU[dow]} · ${DAY_UZ[dow]}` + (isToday ? " · сегодня" : "");
+  const p = document.getElementById("picker");
+  p.value = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+
+  const list = document.getElementById("list");
+  const empty = (t, s) => list.innerHTML = `<div class="empty"><b>${t}</b><span>${s}</span></div>`;
+  if (!week) return empty("Вне семестра", "Занятия идут с 28 сентября 2026 по 27 февраля 2027 года (20 учебных недель).");
+  if (dow === 0) return empty("Выходной", "В воскресенье занятий нет.");
+
+  const items = L.filter(l => l[0] === dow && inWeek(l[5], week));
+  if (!items.length) return empty("Занятий нет", "На эту дату в расписании пар нет.");
+
+  const nowMin = now.getHours() * 60 + now.getMinutes();
+  list.innerHTML = items.map(([, pair, from, to, subj, weeks, room, teacher]) => {
+    const live = isToday && nowMin >= minutes(from) && nowMin <= minutes(to);
+    return `<div class="card${live ? " now" : ""}">
+      <div class="time">${pair} juftlik · ${from}–${to}${live ? " · идёт сейчас" : ""}</div>
+      <div class="subj">${esc(subj)}</div>
+      <div class="line">Аудитория: ${esc(room)}</div>
+      <div class="line">${esc(teacher)}</div>
+      <div class="weeks">Недели: ${weeks.replace(",", ", ")}</div>
+    </div>`;
+  }).join("");
+}
+
+function shift(n) { current = new Date(current.getFullYear(), current.getMonth(), current.getDate() + n); render(); }
+
+document.getElementById("prev").onclick = () => shift(-1);
+document.getElementById("next").onclick = () => shift(1);
+document.getElementById("today").onclick = () => { current = new Date(); render(); };
+document.getElementById("picker").onchange = e => {
+  if (!e.target.value) return;
+  const [y, m, dd] = e.target.value.split("-").map(Number);
+  current = new Date(y, m - 1, dd); render();
+};
+
+// Свайп влево/вправо — следующий/предыдущий день
+let sx = 0, sy = 0;
+document.addEventListener("touchstart", e => { sx = e.touches[0].clientX; sy = e.touches[0].clientY; }, {passive: true});
+document.addEventListener("touchend", e => {
+  const dx = e.changedTouches[0].clientX - sx, dy = e.changedTouches[0].clientY - sy;
+  if (Math.abs(dx) > 70 && Math.abs(dx) > Math.abs(dy) * 1.5) shift(dx < 0 ? 1 : -1);
+}, {passive: true});
+
+// Если страница открыта долго — после полуночи переключиться на новый день
+document.addEventListener("visibilitychange", () => { if (!document.hidden) render(); });
+
+render();
+</script>
+</body>
+</html>
