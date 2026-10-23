@@ -72,29 +72,43 @@ const MONTH = ["января","февраля","марта","апреля","ма
 const LOTIN  = "Lotin tili va tibbiy terminologiya";
 const TARIX  = "O'zbekistonning eng yangi tarixi";
 const AXBOROT = "Tibbiyotda axborot texnologiyalari";
+const PSIX   = "Tibbiyot psixologiyasi va shaxslararo muloqat";
 const QD = "Qarshiboyeva D.";
+const YD = "Yokubova D.";
 
 // [день (1=Пн..6=Сб), пара, начало, конец, предмет, недели, аудитория, преподаватели]
 const L = [
+  [1,"II","9:30","10:50",PSIX,"5-7","404",YD],
+  [1,"III","11:20","12:40",PSIX,"5-7","404",YD],
+  [1,"IV","12:50","14:10","Kelajak soati","1-20","404","Shodmonova D."],
   [1,"V","14:20","15:40",LOTIN,"1-4","402",QD],
   [1,"VI","15:50","17:10",LOTIN,"1-4","402",QD],
 
-  [2,"V","14:20","15:40",AXBOROT,"1-20","6","Muxammadiyev B."],
-  [2,"VI","15:50","17:10",TARIX,"1-20","204","Muslimova I."],
+  [2,"IV","12:50","14:10",PSIX,"5-7","404",YD],
+  [2,"V","14:20","15:40",TARIX,"1-20","207","Muslimova I."],
+  [2,"VI","15:50","17:10",AXBOROT,"1-20","6","Muxammadiyev B."],
 
   [3,"II","9:30","10:50","Rus tili","1-20","202","G'ulomxo'jayeva N."],
   [3,"III","11:20","12:40",LOTIN,"1-4","402",QD],
+  [3,"III","11:20","12:40",PSIX,"5-7","404",YD],
   [3,"IV","12:50","14:10",LOTIN,"1-4","403",QD],
+  [3,"IV","12:50","14:10",PSIX,"5-7","404",YD],
 
   [4,"I","8:00","9:20",LOTIN,"1-4","404",QD],
   [4,"II","9:30","10:50",LOTIN,"1-4","405",QD],
+  [4,"III","11:20","12:40",PSIX,"5-7","404",YD],
+  [4,"IV","12:50","14:10",PSIX,"5-6","404",YD],
 
-  [5,"IV","12:50","14:10",TARIX,"1-20","406","Shodmonova Dono"],
+  [5,"II","9:30","10:50",PSIX,"5-6","404",YD],
+  [5,"III","11:20","12:40",PSIX,"5-6","404",YD],
+  [5,"IV","12:50","14:10",TARIX,"1-20","207","Muslimova I."],
   [5,"V","14:20","15:40",LOTIN,"1-4","407",QD],
   [5,"VI","15:50","17:10",LOTIN,"1-4","408",QD],
 
   [6,"I","8:00","9:20",LOTIN,"1-4","409",QD],
+  [6,"I","8:00","9:20",PSIX,"5-6","404",YD],
   [6,"II","9:30","10:50",LOTIN,"1-4","410",QD],
+  [6,"II","9:30","10:50",PSIX,"5-6","404",YD],
 ];
 
 function inWeek(spec, w) {
